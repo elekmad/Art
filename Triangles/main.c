@@ -61,6 +61,7 @@ void draw_triangles(SDL_Renderer *renderer, double points[6], int geometric, dou
 
 int main( int argc, char *argv[ ] )
 {
+    int animated = 0, nb_triangles_max = 100, geometric = 0, distance = 3;
     SDL_Window *window;
     if( SDL_Init( SDL_INIT_VIDEO ) == -1 )
     {
@@ -83,22 +84,59 @@ int main( int argc, char *argv[ ] )
     pos.h = SCREEN_HEIGTH;
     SDL_RenderClear(renderer);
     SDL_RenderFillRect(renderer, &pos);
+    if(argc > 1)
+	animated = atoi(argv[1]);
+    if(argc > 2)
+        nb_triangles_max = atoi(argv[2]);
+    if(argc > 3)
+	geometric = atoi(argv[3]);
+    if(argc > 4)
+	distance = atoi(argv[4]);
 
         // Main loop
     const Uint8 *keyboard = SDL_GetKeyboardState(NULL);
     SDL_Event event;
+    unsigned int current_time = SDL_GetTicks(), nb_triangles = nb_triangles_max, triangles_speed = 1;;
     double center_x = SCREEN_WIDTH / 2, center_y = SCREEN_HEIGTH / 2, size = (SCREEN_WIDTH < SCREEN_HEIGTH ? SCREEN_WIDTH : SCREEN_HEIGTH) * 0.5;
     for(int num_triangle = 0; num_triangle < 6; num_triangle++)
     {
         double triangle[6] = {center_x, center_y, center_x + size * cos(num_triangle * M_PI / 3), center_y + size * sin(num_triangle * M_PI / 3), center_x + size * cos((num_triangle + 1) * M_PI / 3), center_y + size * sin((num_triangle + 1) * M_PI / 3)};
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        draw_triangles(renderer, triangle, 1, 3, 50, num_triangle % 2);
+        draw_triangles(renderer, triangle, geometric, distance, nb_triangles, num_triangle % 2);
     }
 /*        double triangle[6] = {center_x, center_y, center_x + size * cos(M_PI / 5), center_y + size * sin(M_PI / 5), center_x - size * cos( M_PI / 5), center_y + size * sin(M_PI / 5)};
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        draw_triangles(renderer, triangle, 0, 3, 50, 0);*/
+        draw_triangles(renderer, triangle, geometric, distance, nb_triangles, 0);*/
     while(1)
     {
+	if(animated)
+	{
+       	    if(SDL_GetTicks() - current_time > 50)
+  	    {
+  	        current_time = SDL_GetTicks();
+  	        nb_triangles += triangles_speed;
+  	        if(nb_triangles > nb_triangles_max)
+  	    	    triangles_speed = -1;
+  	        if(nb_triangles < 1)
+  	    	    triangles_speed = 1;
+  	           
+  	        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+  	           pos.x = 0;
+  	           pos.y = 0;
+  	           pos.w = SCREEN_WIDTH;
+  	           pos.h = SCREEN_HEIGTH;
+  	           SDL_RenderClear(renderer);
+  	           SDL_RenderFillRect(renderer, &pos);
+  	    
+  	        for(int num_triangle = 0; num_triangle < 6; num_triangle++)
+  	           {
+  	               double triangle[6] = {center_x, center_y, center_x + size * cos(num_triangle * M_PI / 3), center_y + size * sin(num_triangle * M_PI / 3), center_x + size * cos((num_triangle + 1) * M_PI / 3), center_y + size * sin((num_triangle + 1) * M_PI / 3)};
+  	               SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+  	               draw_triangles(renderer, triangle, geometric, distance, nb_triangles, num_triangle % 2);
+  	           }
+  	    
+  	    }
+	}
         SDL_PumpEvents();
         if(keyboard[SDL_SCANCODE_ESCAPE])
         {
